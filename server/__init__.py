@@ -64,7 +64,7 @@ class Climos(Resource):
         girderIoParams = {
             'mode': 'girder',
             'host': 'localhost', # TODO get actual host/port values
-            'port': 8080,
+            'port': 80,
             'token': token['_id']
         }
 
@@ -74,7 +74,8 @@ class Climos(Resource):
                 'id': str(inFolder['_id']),
                 'resource_type': 'folder',
                 'type': 'string',
-                'format': 'text'
+                'format': 'text',
+                'name': inFolder['name'] + '.zip'
             }),
             'seasons': {
                 'mode': 'inline',
