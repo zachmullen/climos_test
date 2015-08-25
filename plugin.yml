@@ -1,0 +1,5 @@
+name: Climos test
+description: Runs climos analysis via romanesco
+version: 0.1.0
+dependencies:
+    - romanesco
