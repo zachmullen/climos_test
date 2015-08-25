@@ -25,12 +25,10 @@ class Climos(Resource):
                level=AccessType.WRITE)
     def runClimos(self, inFolder, outFolder, params):
         self.requireParams(('seasons', 'vars', 'outputFilename'), params)
+
         user = self.getCurrentUser()
-
         apiUrl = os.path.dirname(cherrypy.url())
-
         jobModel = self.model('job', 'jobs')
-
         job = jobModel.createJob(
             title='Climos: ' + inFolder['name'], type='climos',
             handler='romanesco_handler', user=user)
@@ -71,7 +69,7 @@ class Climos(Resource):
         }
 
         inputs = {
-            'in_dir': girderIoParams.extend({
+            'in_dir': dict(girderIoParams, **{
                 'method': 'GET',
                 'id': str(inFolder['_id']),
                 'resource_type': 'folder',
@@ -99,7 +97,7 @@ class Climos(Resource):
         }
 
         outputs = {
-            'outfile': girderIoParams.extend({
+            'outfile': dict(girderIoParams, **{
                 'parent_type': 'folder',
                 'parent_id': str(outFolder['_id']),
                 'format': 'text',
