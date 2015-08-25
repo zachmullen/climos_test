@@ -83,7 +83,7 @@ class Climos(Resource):
                 'format': 'object',
                 'data': json.loads(params['seasons'])
             },
-            'vars': {
+            'variables': {
                 'mode': 'inline',
                 'type': 'python',
                 'format': 'object',

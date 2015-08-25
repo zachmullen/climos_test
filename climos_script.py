@@ -2,7 +2,7 @@
 #   * in_dir: Input directory
 #   * out_filename: The name of the output file
 #   * seasons: JSON list of season identifiers
-#   * vars: JSON list of vars to include
+#   * variables: JSON list of vars to include
 # OUTPUTS:
 #   * outfile: The full path to the file that was created.
 import os, re
