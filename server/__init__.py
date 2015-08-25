@@ -1,23 +1,137 @@
+import cherrypy
+import json
+import os
+
+from girder.api import access
 from girder.api.rest import Resource, loadmodel
 from girder.api.describe import Description
 from girder.constants import AccessType
 
+_script_file = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                            'climos_script.py')
+with open(_script_file) as f:
+    _climos_script = f.read()
+
 
 class Climos(Resource):
     def __init__(self):
-        self.route('POST', (), 'runClimos')
+        self.resourceName = 'climos'
+        self.route('POST', (), self.runClimos)
 
-    @loadmodel(map={'folderId': 'folder'}, model='folder',
+    @access.user
+    @loadmodel(map={'inputFolderId': 'inFolder'}, model='folder',
                level=AccessType.READ)
-    def runClimos(self, folder, params):
-        self.requireParams(('seasons', 'vars') params)
-        # TODO create task
+    @loadmodel(map={'outputFolderId': 'outFolder'}, model='folder',
+               level=AccessType.WRITE)
+    def runClimos(self, inFolder, outFolder, params):
+        self.requireParams(('seasons', 'vars', 'outputFilename'), params)
+        user = self.getCurrentUser()
 
+        apiUrl = os.path.dirname(cherrypy.url())
+
+        jobModel = self.model('job', 'jobs')
+
+        job = jobModel.createJob(
+            title='Climos: ' + inFolder['name'], type='climos',
+            handler='romanesco_handler', user=user)
+        token = self.model('token').createToken(user=user, days=3)
+
+        task = {
+            'mode': 'python',
+            'script': _climos_script,
+            'inputs': [{
+                'id': 'in_dir',
+                'type': 'directory',
+                'format': 'path'
+            }, {
+                'id': 'out_filename',
+                'type': 'string',
+                'format': 'text'
+            }, {
+                'id': 'vars',
+                'type': 'python',
+                'format': 'object'
+            }, {
+                'id': 'seasons',
+                'type': 'python',
+                'format': 'object'
+            }],
+            'outputs': [{
+                'id': 'outfile',
+                'type': 'string',
+                'format': 'text'
+            }]
+        }
+
+        girderIoParams = {
+            'mode': 'girder',
+            'host': 'localhost', # TODO get actual host/port values
+            'port': 8080,
+            'token': token['_id']
+        }
+
+        inputs = {
+            'in_dir': girderIoParams.extend({
+                'method': 'GET',
+                'id': str(inFolder['_id']),
+                'resource_type': 'folder',
+                'type': 'string',
+                'format': 'text'
+            }),
+            'seasons': {
+                'mode': 'inline',
+                'type': 'python',
+                'format': 'object',
+                'data': json.loads(params['seasons'])
+            },
+            'vars': {
+                'mode': 'inline',
+                'type': 'python',
+                'format': 'object',
+                'data': json.loads(params['vars'])
+            },
+            'out_filename': {
+                'mode': 'inline',
+                'type': 'string',
+                'format': 'text',
+                'data': params['outputFilename'].strip()
+            }
+        }
+
+        outputs = {
+            'outfile': girderIoParams.extend({
+                'parent_type': 'folder',
+                'parent_id': str(outFolder['_id']),
+                'format': 'text',
+                'type': 'string'
+            })
+        }
+
+        job['kwargs'] = {
+            'task': task,
+            'inputs': inputs,
+            'outputs': outputs,
+            'jobInfo': {
+                'method': 'PUT',
+                'url': '/'.join((apiUrl, 'job', str(job['_id']))),
+                'headers': {'Girder-Token': token['_id']},
+                'logPrint': True
+            },
+            'validate': False,
+            'auto_convert': True,
+            'cleanup': False,
+        }
+        job = jobModel.save(job)
+        jobModel.scheduleJob(job)
+
+        return jobModel.filter(job, user)
     runClimos.description = (
         Description('Run the climos task in romanesco.')
-        .param('folderId', 'The folder containing input files.')
+        .param('inputFolderId', 'The folder containing input files.')
+        .param('outputFolderId', 'The folder to upload the output into.')
         .param('vars', 'JSON list of vars to use.')
-        .param('seasons', 'JSON list of season identifiers.'))
+        .param('seasons', 'JSON list of season identifiers.')
+        .param('outputFilename', 'The name of the output file.'))
 
 
 def load(info):
