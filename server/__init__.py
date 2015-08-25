@@ -39,8 +39,8 @@ class Climos(Resource):
             'script': _climos_script,
             'inputs': [{
                 'id': 'in_dir',
-                'type': 'directory',
-                'format': 'path'
+                'type': 'string',
+                'format': 'text'
             }, {
                 'id': 'out_filename',
                 'type': 'string',
