@@ -5,9 +5,12 @@
 #   * vars: JSON list of vars to include
 # OUTPUTS:
 #   * outfile: The full path to the file that was created.
-from metrics.frontend.inc_reduce import *
 import os, re
 import argparse
+
+os.environ['UVCDAT_ANONYMOUS_LOG'] = 'no'  # disable, otherwise it prompts on stdin
+
+from metrics.frontend.inc_reduce import *
 
 seamons = {  'ANN': [ '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12' ],
              'DJF': [ '01', '02', '12' ],
@@ -270,8 +273,8 @@ def climos( fileout_template, seasonnames, varnames, datafilenames, omitBySeason
         g.close()
 
 
-infiles = [os.path.join(in_folder, f) for f in os.listdir(in_dir)]
-outfile = os.path.join(os.path.dirname(in_folder), out_filename)
+infiles = [os.path.join(in_dir, f) for f in os.listdir(in_dir)]
+outfile = os.path.join(os.path.dirname(in_dir), out_filename)
 
 climos(outfile, seasons, variables, infiles, [])
 

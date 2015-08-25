@@ -75,7 +75,7 @@ class Climos(Resource):
                 'resource_type': 'folder',
                 'type': 'string',
                 'format': 'text',
-                'name': inFolder['name'] + '.zip'
+                'name': inFolder['name']
             }),
             'seasons': {
                 'mode': 'inline',
