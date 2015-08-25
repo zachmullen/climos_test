@@ -46,7 +46,7 @@ class Climos(Resource):
                 'type': 'string',
                 'format': 'text'
             }, {
-                'id': 'vars',
+                'id': 'variables',
                 'type': 'python',
                 'format': 'object'
             }, {
