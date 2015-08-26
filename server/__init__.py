@@ -2,8 +2,7 @@ import cherrypy
 import json
 import os
 
-from girder.api import access
-from girder.api.rest import Resource, loadmodel
+from girder.api import access, rest
 from girder.api.describe import Description
 from girder.constants import AccessType
 
@@ -13,21 +12,22 @@ with open(_script_file) as f:
     _climos_script = f.read()
 
 
-class Climos(Resource):
+class Climos(rest.Resource):
     def __init__(self):
         self.resourceName = 'climos'
         self.route('POST', (), self.runClimos)
 
     @access.user
-    @loadmodel(map={'inputFolderId': 'inFolder'}, model='folder',
-               level=AccessType.READ)
-    @loadmodel(map={'outputFolderId': 'outFolder'}, model='folder',
-               level=AccessType.WRITE)
+    @rest.loadmodel(map={'inputFolderId': 'inFolder'}, model='folder',
+                    level=AccessType.READ)
+    @rest.loadmodel(map={'outputFolderId': 'outFolder'}, model='folder',
+                    level=AccessType.WRITE)
     def runClimos(self, inFolder, outFolder, params):
         self.requireParams(('seasons', 'vars', 'outputFilename'), params)
 
         user = self.getCurrentUser()
-        apiUrl = os.path.dirname(cherrypy.url())
+        urlParts = rest.getUrlParts()
+        apiUrl = rest.getApiUrl()
         jobModel = self.model('job', 'jobs')
         job = jobModel.createJob(
             title='Climos: ' + inFolder['name'], type='climos',
@@ -63,8 +63,10 @@ class Climos(Resource):
 
         girderIoParams = {
             'mode': 'girder',
-            'host': 'localhost', # TODO get actual host/port values
-            'port': 80,
+            'host': urlParts.hostname,
+            'port': urlParts.port,
+            'api_root': rest.getApiUrl(urlParts.path),
+            'scheme': urlParts.scheme,
             'token': token['_id']
         }
 
