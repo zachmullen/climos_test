@@ -209,6 +209,9 @@ def climos( fileout_template, seasonnames, varnames, datafilenames, omitBySeason
     redfiles = {}  # reduced files
     for seasonname in seasonnames:
         print "doing season",seasonname
+        if isinstance(seasonname, unicode):
+            seasonname = seasonname.encode('utf8')
+
         sredfiles = {}  # season reduced files
         datafilenames = [fn for fn in datafilenames if fn not in omit_files[seasonname]]
         datafilenames2 = restrict_to_season( datafilenames, seasonname )
