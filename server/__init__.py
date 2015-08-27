@@ -120,7 +120,7 @@ class Climos(rest.Resource):
             },
             'validate': False,
             'auto_convert': True,
-            'cleanup': False,
+            'cleanup': True
         }
         job = jobModel.save(job)
         jobModel.scheduleJob(job)
